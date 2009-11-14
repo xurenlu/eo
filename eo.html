@@ -1,0 +1,132 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" /> 
+<head>
+    <script type="text/javascript" src="js/jquery.js">
+    </script>
+    <style type="text/css">
+        .current {
+            border:1px solid red;
+            padding:1px;
+        }
+        .red {
+            color:red;
+        }
+        #editor{
+            position:absolute;
+            z-index:99;
+            background:#ccc;
+            padding:30px;
+        }
+        #editor *{
+            background:#ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="template">
+    </div>
+    <hr/>
+    <div id="editor">
+        <div style="text-align:right"><a href="#close" class="close">Close</a></div>
+        <form >
+            href:<input name="href" value="http://" class="href"><br>
+            title/img_src:<input name="title" value="" class="title"><br>
+            Hot:<input name="hot" value="yes" type="checkbox" class="hot"><br>
+        </form>
+    </div>
+    <hr/>
+    <div id="preview">
+        <textarea rows="8" cols="55">
+        </textarea>
+    </div>
+    <script type="text/javascript">
+        var EO= function(tmp_div,edt_div,prv_div,tpl){
+            var _tmp={
+                "_tmp_div":tmp_div,
+                "_edt_div":edt_div,
+                "_prv_div":prv_div,
+                "_tpl":tpl,
+                "_current":"",
+                "_currentObj":""
+            };
+            _tmp["genPreview"]=function(){
+                $("textarea",prv_div).val(tmp_div.html());
+            };
+            _tmp["onEditUrl"]=function(){
+                if(_tmp._currentObj!=""){
+                   _tmp._currentObj.attr("href",$(this).val());
+                }
+                _tmp["genPreview"]();
+            };
+            _tmp["onEditText"]=function(){
+                if(_tmp._currentObj!=""){
+                   _tmp._currentObj.html($(this).val());
+                }
+                _tmp["genPreview"]();
+            };
+            _tmp["onEditHot"]=function(){
+                var checked=$(this).attr("checked");
+                if(_tmp._currentObj!=""){
+                    if(checked)
+                        _tmp._currentObj.addClass("red");
+                    else
+                        _tmp._currentObj.removeClass("red");
+
+                }
+                _tmp["genPreview"]();
+            };
+            _tmp["init"]=function(){
+                    $(_tmp._tmp_div).html(tpl);
+                    _tmp._href_input=$("input.href",_tmp._edt_div);
+                    _tmp._title_input=$("input.title",_tmp._edt_div);
+                    _tmp._hot_input=$("input.hot",_tmp._edt_div);
+                    _tmp._href_input.change(_tmp["onEditUrl"]);
+                    _tmp._title_input.change(_tmp["onEditText"]);
+                    _tmp._hot_input.change(_tmp["onEditHot"]);
+                    _tmp._edt_div.hide();
+                    _tmp._prv_div.click(function(){_tmp._edt_div.hide();});
+                    $("a.close",_tmp._edt_div).click(function(){
+                            _tmp._edt_div.hide();
+                    });
+            };
+            _tmp["_attach"]=function(){
+                    var _self=_tmp;
+                    var links=$("a.adlink",_tmp._tmp_div);
+                    links.each(function(i){
+                            links[i].setAttribute("rel","obj_"+i);
+                            });
+                    var links=$("a.adlink",this._tmp_div).click(function(evt){
+                        _tmp._edt_div.show();
+                        $(links).removeClass("current");
+                        $(this).addClass("current");
+                        _tmp._current=$(this).attr("rel");
+                        _tmp._currentObj=$(this);
+                        try{
+                        $(_self._href_input).val($(this).attr("href"));
+                        $(_self._title_input).val($(this).text());
+                        }catch(e){
+                        console.debug(e);
+                        }
+                        _tmp._edt_div.css("top",evt.pageY);
+                        _tmp._edt_div.css("left",evt.pageX+10);
+                        return false;
+                    });
+
+            };
+            _tmp["attach"]=function(){
+                    setTimeout(this._attach,300);
+            };
+            _tmp["preview"]=function(){};
+            return _tmp;
+            };
+        $(document).ready(function(){
+                var vk=new EO($("div#template"),$("div#editor"),$("div#preview"),'<ul><li><a href="file1" class="adlink">demo1</a></li><li><a href="file2" class="adlink">demo2</a></li></ul>');
+            //alert(vk);
+            vk.init();
+            vk.attach();
+        });
+    </script>
+
+</body>
+</html>
