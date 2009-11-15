@@ -2,11 +2,12 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" /> 
 <head>
-    <script type="text/javascript" src="js/jquery.js">
-    </script>
+    <script type="text/javascript" src="js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.colorbox-min.js"></script>
     <style type="text/css">
+
         .current {
-            border:1px solid red;
+            border:1px dashed red;
             padding:1px;
         }
         .red {
@@ -15,57 +16,155 @@
         #editor{
             position:absolute;
             z-index:99;
-            background:#ccc;
-            padding:30px;
+            background:#fef0f0;
+            padding:15px;
+            border:1px solid #ccc;
         }
         #editor *{
-            background:#ccc;
+        }
+        #editor a.close {
+            position:relative;
+            top:-10px;
+            right:-10px;
+        }
+        table {
+            border:1px solid #ccc;
+        }
+        td.left {
+            border-right:1px solid #ccc;
         }
     </style>
+    <link type="text/css" media="screen" rel="stylesheet" href="colorbox.css" /> 
 </head>
 <body>
-    <div id="template">
-    </div>
-    <hr/>
+    
+    <div >
+        <h1>第一次使用请查看:</h1>
+        <ol>
+            <li>请先在模块编辑区填入写好的模板,模板更新的同时,下面"默认显示"和“北京地区显示"也会自动更新;</li>
+            <li>请在"默认显示"和"北京地区显示“中点击链接和图片编辑属性;编辑后属性会立即被应用;</li>
+            <li>记得检查各个链接是否正确;</li>
+            <li>选择“页面"，并指定名称;</li>
+        <li>保存;</li>
+    </ol>
+</div>
+<div id="template-editor">
+    <form onsubmit="return false;">
+        <h2>请更换模板代码:</h2>
+        <textarea rows="8" cols="60" id="template-editor-textbox"></textarea>
+    </form>
+        <h2>请更换链接:</h2>
+    <table width="100%" style="text-align:center;" cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="left">
+                默认显示
+            </td>
+            <td>
+                北京地区显示
+            </td>
+        </tr>
+
+        <tr>
+            <td width="50%" class="left">
+                <div id="preview-default">
+                </div>
+            </td>
+            <td>
+                <div id="preview-beijing">
+                </div>
+            </td>
+    </table>
+
     <div id="editor">
         <div style="text-align:right"><a href="#close" class="close">Close</a></div>
-        <form >
-            href:<input name="href" value="http://" class="href"><br>
-            title/img_src:<input name="title" value="" class="title"><br>
-            Hot:<input name="hot" value="yes" type="checkbox" class="hot"><br>
+        <form onsubmit="return false;">
+            目标链接:<input name="href" value="http://" class="href"><br>
+            文字或图片地址:<input name="title" value="" class="title"><br>
+            标红:<input name="hot" value="" type="checkbox" class="hot" checked="false"><br>
         </form>
     </div>
-    <hr/>
-    <div id="preview">
-        <textarea rows="8" cols="55">
-        </textarea>
-    </div>
+        <h2>请核对广告数据:</h2>
+    <div id="alllinks"></div>
+        <h2>请设定page和position:</h2>
+    <fieldset >
+        <legend>保存</legend>
+        <form id="main-form" action="">
+            <ol>
+                <li>
+                选择页面:<select name="page" id="page">
+                    <option value="all">全部</option>
+                    <option value="homepage">首页</option>
+                    <option value="finance">财经</option>
+                    <option value="fangchan">房产</option>
+                </select>
+                </li>
+                <li>
+                指定一个名称(英文+数字组成):<input name="position" size="20">
+                </li>
+            </ol>
+                <button type="submit">提交</button>
+        </form>
+    </fieldset>
     <script type="text/javascript">
-        var EO= function(tmp_div,edt_div,prv_div,tpl){
+        var EO= function(edit_textbox,edt_div,prv_default,prv_beijing){
             var _tmp={
-                "_tmp_div":tmp_div,
+                "_edit_textbox":edit_textbox,
                 "_edt_div":edt_div,
-                "_prv_div":prv_div,
-                "_tpl":tpl,
+                "_prv_default":prv_default,
+                "_prv_beijing":prv_beijing,
                 "_current":"",
                 "_currentObj":""
             };
             _tmp["genPreview"]=function(){
-                $("textarea",prv_div).val(tmp_div.html());
+                var links=$(".adlink");
+                var i=0;
+                var data=[];
+                var ihtml="<table border=\"1\" width='90%'><tr><td>标题</td><td>链接</td><td>是否标红</td></tr>";
+                for(i=0;i<links.length;i++){
+                    data[i]=[];
+                    if($(links[i]).attr("tagName")=="A"){
+                        data[i]["href"]=$(links[i]).attr("href");
+                        data[i]["title"]=$(links[i]).html();
+                        if($(links[i]).hasClass("red"))
+                            data[i]["hot"]="yes";
+                        else
+                            data[i]["hot"]="no";
+                    }
+                    else{
+                        data[i]["href"]=$(links[i].parentObject).attr("href");
+                        data[i]["title"]=$(links[i]).attr("src");
+                        if($(links[i]).hasClass("red"))
+                            data[i]["hot"]="yes";
+                        else
+                            data[i]["hot"]="no";
+                    }
+                    ihtml=ihtml+"<tr><td>"+data[i]["title"]+"</td><td>"+data[i]["href"]+"</td><td>"+data[i]["hot"]+"</td>";
+                }
+                ihtml=ihtml+"</table>";
+                $("div#alllinks").html(ihtml);
             };
             _tmp["onEditUrl"]=function(){
                 if(_tmp._currentObj!=""){
-                   _tmp._currentObj.attr("href",$(this).val());
+                    if(_tmp._currentObj.attr("tagName")=="A")
+                        _tmp._currentObj.attr("href",$(this).val());
+                    else
+                        $(_tmp._currentObj.parentObject).attr("href",$(this).val());
+
                 }
                 _tmp["genPreview"]();
             };
             _tmp["onEditText"]=function(){
                 if(_tmp._currentObj!=""){
-                   _tmp._currentObj.html($(this).val());
+                    if(_tmp._currentObj.attr("tagName")=="A")
+                        _tmp._currentObj.html($(this).val());
+                    else
+                        _tmp._currentObj.attr("src",$(this).val());
+
                 }
                 _tmp["genPreview"]();
             };
             _tmp["onEditHot"]=function(){
+                console.debug("checked?");
                 var checked=$(this).attr("checked");
                 if(_tmp._currentObj!=""){
                     if(checked)
@@ -76,42 +175,77 @@
                 }
                 _tmp["genPreview"]();
             };
+            _tmp["apply_new_template"]=function(){
+                _tmp._prv_default.html($(this).val());
+                _tmp._prv_beijing.html($(this).val());
+            };
+
             _tmp["init"]=function(){
-                    $(_tmp._tmp_div).html(tpl);
+                _tmp._prv_default.html(_tmp._edit_textbox.val());
+                _tmp._prv_beijing.html(_tmp._edit_textbox.val());
+                _tmp["genPreview"]();
+                    _tmp._edit_textbox.change(_tmp["apply_new_template"]);
+                    _tmp._edit_textbox.keyup(_tmp["apply_new_template"]);
+                    _tmp._prv_default.addClass("current");
+                    _tmp._prv_default.click(function(evt){
+                            evt=evt||event;
+                            $(_tmp._prv_beijing).removeClass("current");
+                            $(this).addClass("current");
+                    });
+                    _tmp._prv_beijing.click(function(evt){
+                            evt=evt||event;
+                            $(_tmp._prv_default).removeClass("current");
+                            $(this).addClass("current");
+                    });
+
                     _tmp._href_input=$("input.href",_tmp._edt_div);
                     _tmp._title_input=$("input.title",_tmp._edt_div);
                     _tmp._hot_input=$("input.hot",_tmp._edt_div);
                     _tmp._href_input.change(_tmp["onEditUrl"]);
                     _tmp._title_input.change(_tmp["onEditText"]);
                     _tmp._hot_input.change(_tmp["onEditHot"]);
+                    _tmp._href_input.keyup(_tmp["onEditUrl"]);
+                    _tmp._title_input.keyup(_tmp["onEditText"]);
+                    _tmp._hot_input.keyup(_tmp["onEditHot"]);
                     _tmp._edt_div.hide();
-                    _tmp._prv_div.click(function(){_tmp._edt_div.hide();});
                     $("a.close",_tmp._edt_div).click(function(){
                             _tmp._edt_div.hide();
-                    });
+                            return false;
+                            });
+                    //$(".iframe").colorbox({width:"80%", height:"80%", iframe:true});
             };
             _tmp["_attach"]=function(){
-                    var _self=_tmp;
-                    var links=$("a.adlink",_tmp._tmp_div);
-                    links.each(function(i){
-                            links[i].setAttribute("rel","obj_"+i);
-                            });
-                    var links=$("a.adlink",this._tmp_div).click(function(evt){
+                var links=$(".adlink");
+                links.each(function(i){
+                        $(links[i]).attr("rel","obj_"+i);
+                });
+                links.click(function(evt){
                         _tmp._edt_div.show();
-                        $(links).removeClass("current");
-                        $(this).addClass("current");
-                        _tmp._current=$(this).attr("rel");
-                        _tmp._currentObj=$(this);
-                        try{
-                        $(_self._href_input).val($(this).attr("href"));
-                        $(_self._title_input).val($(this).text());
-                        }catch(e){
-                        console.debug(e);
+                        if($(this).hasClass("red")){
+                            _tmp._hot_input.attr("checked",true);
                         }
-                        _tmp._edt_div.css("top",evt.pageY);
-                        _tmp._edt_div.css("left",evt.pageX+10);
-                        return false;
-                    });
+                        else{
+                            _tmp._hot_input.attr("checked",false);
+                        }
+                    $(links).removeClass("current");
+                    $(this).addClass("current");
+                    _tmp._current=$(this).attr("rel");
+                    _tmp._currentObj=$(this);
+                    try{
+                        if($(this).attr("tagName")=="IMG"){
+                            $(_tmp._href_input).val($(this.parentObject).attr("href"));
+                            $(_tmp._title_input).val($(this).attr("src"));
+                        }
+                        else{
+                            $(_tmp._href_input).val($(this).attr("href"));
+                            $(_tmp._title_input).val($(this).text());
+                        }
+                    }catch(e){
+                    }
+                    _tmp._edt_div.css("top",evt.pageY);
+                    _tmp._edt_div.css("left",evt.pageX+10);
+                    return false;
+                });
 
             };
             _tmp["attach"]=function(){
@@ -120,9 +254,15 @@
             _tmp["preview"]=function(){};
             return _tmp;
             };
-        $(document).ready(function(){
-                var vk=new EO($("div#template"),$("div#editor"),$("div#preview"),'<ul><li><a href="file1" class="adlink">demo1</a></li><li><a href="file2" class="adlink">demo2</a></li></ul>');
-            //alert(vk);
+$(document).ready(function(){
+        var tpl= '<ul><li><a href="file1" class="adlink">demo1</a></li><li><a href="file2" class="adlink">demo2</a></li><li><a href=""><img src="images/loading.gif" class="adlink"></a></li></ul>';
+        $("textarea#template-editor-textbox").val(tpl);
+        var vk=new EO(
+                    $("textarea#template-editor-textbox"),
+                    $("div#editor"),
+                    $("div#preview-default"),
+                    $("div#preview-beijing")
+                    );
             vk.init();
             vk.attach();
         });

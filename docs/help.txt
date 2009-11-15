@@ -1,0 +1,16 @@
+General Title
+    [title link]
+    Last Updated: \%\%date(\%Y-\%m-\%d)
+
+%! target:html
+%! encoding: UTF-8
+%! options: --toc
+%! postproc(html): @@ <BR>
+%! postproc(xhtml): @@ <BR>
+%! postproc(html): {{(.*?)}} <\1>
+%!postproc(html): {{ <
+%!postproc(html): }} >
+
+= editonline Help document (广告在线编辑功能简介) =
+
+    请直接在“默认显示"和“北京地区显示”下面点击广告链接,在弹出的属性编辑器中编辑文字,地址和标红属性;
